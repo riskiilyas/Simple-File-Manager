@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:title="Search"
+        android:icon="@drawable/ic_baseline_search_24"
+        android:id="@+id/iSearch"
+        app:showAsAction="ifRoom|collapseActionView"
+        app:actionViewClass="androidx.appcompat.widget.SearchView" />
+
+    <group>
+        <item
+            android:title="About"
+            android:id="@+id/iAbout"
+            android:icon="@drawable/ic_baseline_help_24"/>
+        <item
+            android:title="Exit"
+            android:id="@+id/iExit"
+            android:icon="@drawable/ic_baseline_exit_to_app_24"/>
+    </group>
+
+</menu>
