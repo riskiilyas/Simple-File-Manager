@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Filter
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
@@ -12,17 +13,26 @@ import java.io.File
 
 class FileAdapter(
     private val context: Context,
-    private var list: List<File>,
+    private var fullList: List<File>,
     private val callback: OnFileListener
     ) : RecyclerView.Adapter<FileAdapter.FileViewHolder>() {
 
+//    private lateinit var usedList: List<File>
+
+    init {
+        sortList()
+    }
+
+    private var usedList = fullList
+
     inner class FileViewHolder(private val binding: FileItemLayoutBinding): RecyclerView.ViewHolder(binding.root) {
-        fun bind(file: File) {
+        fun bind(file: File, position: Int) {
             binding.tvFileName.text = file.name
+            binding.ivFileType.generateIcon(file)
 
             binding.root.setOnClickListener {
                 if (file.isDirectory) {
-                    updateList(callback.onDirectoryOpen(file.path))
+                    updateList(callback.onDirectoryOpen(position))
                 } else {
                     callback.onFileOpen(file)
                 }
@@ -64,8 +74,25 @@ class FileAdapter(
 
     @SuppressLint("NotifyDataSetChanged")
     fun updateList(list: List<File>) {
-        this.list = list
+        fullList = list
+        sortList()
         notifyDataSetChanged()
+    }
+
+    fun cancelSearch() {
+        usedList = fullList
+        notifyDataSetChanged()
+    }
+
+    fun search(str: String) {
+        usedList = fullList.filter {
+            it.name.contains(str, true)
+        }
+        notifyDataSetChanged()
+    }
+
+    private fun sortList() {
+        usedList = fullList.sortedWith (compareBy{it.name})
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
@@ -74,13 +101,13 @@ class FileAdapter(
     }
 
     override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
-        holder.bind(list[position])
+        holder.bind(usedList[position], position)
     }
 
-    override fun getItemCount() = list.size
+    override fun getItemCount() = usedList.size
 
     interface OnFileListener {
-        fun onDirectoryOpen(directory: String): List<File>
+        fun onDirectoryOpen(directoryPosition: Int): List<File>
         fun onFileOpen(file: File)
         fun onFileChanged(): List<File>
     }

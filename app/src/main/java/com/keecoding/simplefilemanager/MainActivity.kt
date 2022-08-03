@@ -7,12 +7,15 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.Menu
+import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.MimeTypeFilter
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.keecoding.simplefilemanager.databinding.ActivityMainBinding
@@ -38,6 +41,26 @@ class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.app_menu, menu)
+        menu?.let {
+            val searchMenu = it.findItem(R.id.iSearch)
+            val search = searchMenu.actionView as SearchView
+            search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(p0: String?): Boolean {
+                    mAdapter.search(p0 ?: "")
+                    return true
+                }
+
+                override fun onQueryTextChange(p0: String?): Boolean {
+                    mAdapter.search(p0 ?: "")
+                    return true
+                }
+            })
+
+            search.setOnCloseListener {
+                mAdapter.cancelSearch()
+                true
+            }
+        }
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -54,7 +77,6 @@ class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
     private fun setupFiles() {
         if (checkPermission()) {
             val files = getFiles()
-            Toast.makeText(this, "${files.size}", Toast.LENGTH_SHORT).show()
             mAdapter = FileAdapter(this, files, this)
             binding.recyclerView.apply {
                 adapter = mAdapter
@@ -104,12 +126,11 @@ class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
     }
 
     override fun onBackPressed() {
-        try {
-            Log.d("aaaa", "onBackPressed: ${vm.fileList.size}")
+        if(vm.fileList.size > 1) {
             vm.fileList.pop()
-            vm.files.pop()
             mAdapter.updateList(getFiles())
-        } catch (e: EmptyStackException) {
+            binding.recyclerView.smoothScrollToPosition(vm.files.pop())
+        } else {
             AlertDialog.Builder(this).apply {
                 setTitle("Are You Sure Exit?")
                 setPositiveButton("Exit") { _, _ ->
@@ -123,16 +144,17 @@ class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
         }
     }
 
-    override fun onDirectoryOpen(directory: String): List<File> {
-        return vm.openFolder(directory)
+    override fun onDirectoryOpen(directoryPosition: Int): List<File> {
+        return vm.openFolder(directoryPosition)
     }
 
     override fun onFileOpen(file: File) {
         try {
             val intent = Intent()
             intent.action = Intent.ACTION_VIEW
-            val type = "image/*"
-            intent.setDataAndType(Uri.parse(file.absolutePath), type)
+            val mime = MimeTypeMap.getSingleton()
+            val typeCompat = mime.getMimeTypeFromExtension(file.extension)
+            intent.setDataAndType(Uri.parse(file.absolutePath), typeCompat)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
         } catch (e: Exception) {

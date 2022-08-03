@@ -3,32 +3,35 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="64dp"
+    android:layout_height="56dp"
+    android:padding="8dp"
     android:background="@color/white">
 
     <ImageView
         android:id="@+id/ivFileType"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="28dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/view"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/folder" />
 
     <TextView
         android:id="@+id/tvFileName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TEST"
+        android:layout_marginLeft="16dp"
         android:textColor="@color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/view"
+        app:layout_constraintStart_toEndOf="@+id/ivFileType"
         app:layout_constraintTop_toTopOf="parent" />
 
     <View
+        android:id="@+id/view"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
+        android:background="#C6C6C6"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
