@@ -11,7 +11,7 @@ class FileViewModel: ViewModel() {
     val files: Stack<Int> = Stack()
 
     init {
-        fileList.push(File(Environment.getExternalStorageDirectory().path).listFiles().asList())
+        fileList.push(File(Environment.getExternalStorageDirectory().path).listFiles()?.asList())
 
         files.push(0)
     }
