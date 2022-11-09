@@ -3,6 +3,7 @@ package com.keecoding.simplefilemanager
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.PopupMenu
@@ -18,8 +19,6 @@ class FileAdapter(
     private val callback: OnFileListener
     ) : RecyclerView.Adapter<FileAdapter.FileViewHolder>() {
 
-//    private lateinit var usedList: List<File>
-
     init {
         sortList()
     }
@@ -28,14 +27,14 @@ class FileAdapter(
 
     inner class FileViewHolder(private val binding: FileItemLayoutBinding): RecyclerView.ViewHolder(binding.root) {
         @SuppressLint("SetTextI18n")
-        fun bind(file: File, position: Int) {
+        fun bind(file: File) {
             binding.tvFileName.text = file.name
             binding.ivFileType.generateIcon(file)
             binding.tvLastModified.text = "Last Modified: ${Date(file.lastModified())}"
 
             binding.root.setOnClickListener {
                 if (file.isDirectory) {
-                    updateList(callback.onDirectoryOpen(position))
+                    callback.onDirectoryOpen(file.absolutePath)
                 } else {
                     callback.onFileOpen(file)
                 }
@@ -55,7 +54,6 @@ class FileAdapter(
                             val name = file.name
                             if (file.delete()) {
                                 Toast.makeText(context, "Deleted $name", Toast.LENGTH_SHORT).show()
-                                callback.onFileChanged()
                             }
                         }
 
@@ -110,15 +108,14 @@ class FileAdapter(
     }
 
     override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
-        holder.bind(usedList[position], position)
+        holder.bind(usedList[position])
     }
 
     override fun getItemCount() = usedList.size
 
     interface OnFileListener {
-        fun onDirectoryOpen(directoryPosition: Int): List<File>
+        fun onDirectoryOpen(directoryPath: String)
         fun onFileOpen(file: File)
-        fun onFileChanged(): List<File>
         fun onShareFile(file: File)
         fun onFileRename(file: File)
     }
