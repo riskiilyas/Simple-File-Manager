@@ -1,10 +1,13 @@
 package com.keecoding.simplefilemanager
 
+import android.app.Application
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.ContactsContract.Directory.PACKAGE_NAME
 import android.util.Log
 import android.view.Menu
 import android.webkit.MimeTypeMap
@@ -15,6 +18,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.content.MimeTypeFilter
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -126,7 +130,7 @@ class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
     }
 
     override fun onBackPressed() {
-        if(vm.fileList.size > 1) {
+        if (vm.fileList.size > 1) {
             vm.fileList.pop()
             mAdapter.updateList(getFiles())
             binding.recyclerView.smoothScrollToPosition(vm.files.pop())
@@ -154,7 +158,10 @@ class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
             intent.action = Intent.ACTION_VIEW
             val mime = MimeTypeMap.getSingleton()
             val typeCompat = mime.getMimeTypeFromExtension(file.extension)
-            intent.setDataAndType(Uri.parse(file.absolutePath), typeCompat)
+            Log.d("aaaa", file.absolutePath)
+//            intent.setDataAndType(Uri.parse(file.absolutePath), typeCompat)
+            intent.setDataAndType(FileProvider.getUriForFile(this,
+                "$PACKAGE_NAME.fileprovider", file), typeCompat)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
         } catch (e: Exception) {
@@ -165,5 +172,18 @@ class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
     override fun onFileChanged(): List<File> {
         vm.fileList.pop()
         return vm.openFolder(vm.files.peek())
+    }
+
+    override fun onShareFile(file: File) {
+        val intentShare = Intent()
+        intentShare.action = Intent.ACTION_SEND
+        val mime = MimeTypeMap.getSingleton()
+        val typeCompat = mime.getMimeTypeFromExtension(file.extension)
+        intentShare.setDataAndType(Uri.parse(file.absolutePath), typeCompat)
+        intentShare.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intentShare)
+    }
+
+    override fun onFileRename(file: File) {
     }
 }
