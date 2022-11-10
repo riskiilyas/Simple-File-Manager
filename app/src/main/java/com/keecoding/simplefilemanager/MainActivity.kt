@@ -27,20 +27,18 @@ import java.io.File
 import java.util.*
 
 
-class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var vm: FileViewModel
     private lateinit var binding: ActivityMainBinding
-    private lateinit var mAdapter: FileAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        vm = ViewModelProvider(this).get(FileViewModel::class.java)
+        vm = ViewModelProvider(this)[FileViewModel::class.java]
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupFiles()
-        binding.refreshLayout.setOnRefreshListener { setupFiles() }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -50,46 +48,25 @@ class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
             val search = searchMenu.actionView as SearchView
             search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(p0: String?): Boolean {
-                    mAdapter.search(p0 ?: "")
                     return true
                 }
 
                 override fun onQueryTextChange(p0: String?): Boolean {
-                    mAdapter.search(p0 ?: "")
                     return true
                 }
             })
 
             search.setOnCloseListener {
-                mAdapter.cancelSearch()
                 true
             }
         }
         return super.onCreateOptionsMenu(menu)
     }
 
-    private fun getFiles(): List<File> {
-        return if (vm.fileList.isNullOrEmpty()) {
-            val path = Environment.getExternalStorageDirectory().path
-            val file = File(path)
-            file.listFiles()?.asList() ?: listOf()
-        } else {
-            vm.fileList.peek()
-        }
-    }
-
     private fun setupFiles() {
-        if (checkPermission()) {
-            val files = getFiles()
-            mAdapter = FileAdapter(this, files, this)
-            binding.recyclerView.apply {
-                adapter = mAdapter
-                layoutManager = LinearLayoutManager(this@MainActivity)
-            }
-        } else {
+        if (!checkPermission()) {
             requestPermission()
         }
-        binding.refreshLayout.isRefreshing = false
     }
 
     private fun checkPermission(): Boolean {
@@ -129,61 +106,26 @@ class MainActivity : AppCompatActivity(), FileAdapter.OnFileListener {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    override fun onBackPressed() {
-        if (vm.fileList.size > 1) {
-            vm.fileList.pop()
-            mAdapter.updateList(getFiles())
-            binding.recyclerView.smoothScrollToPosition(vm.files.pop())
-        } else {
-            AlertDialog.Builder(this).apply {
-                setTitle("Are You Sure Exit?")
-                setPositiveButton("Exit") { _, _ ->
-                    super.onBackPressed()
-                }
-                setNegativeButton("Cancel") { _, _ ->
-                    setCancelable(true)
-                }
-                show()
-            }
-        }
-    }
+    fun getViewModel() = vm
 
-    override fun onDirectoryOpen(directoryPosition: Int): List<File> {
-        return vm.openFolder(directoryPosition)
-    }
 
-    override fun onFileOpen(file: File) {
-        try {
-            val intent = Intent()
-            intent.action = Intent.ACTION_VIEW
-            val mime = MimeTypeMap.getSingleton()
-            val typeCompat = mime.getMimeTypeFromExtension(file.extension)
-            Log.d("aaaa", file.absolutePath)
-//            intent.setDataAndType(Uri.parse(file.absolutePath), typeCompat)
-            intent.setDataAndType(FileProvider.getUriForFile(this,
-                "$PACKAGE_NAME.fileprovider", file), typeCompat)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Cannot open the file", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onFileChanged(): List<File> {
-        vm.fileList.pop()
-        return vm.openFolder(vm.files.peek())
-    }
-
-    override fun onShareFile(file: File) {
-        val intentShare = Intent()
-        intentShare.action = Intent.ACTION_SEND
-        val mime = MimeTypeMap.getSingleton()
-        val typeCompat = mime.getMimeTypeFromExtension(file.extension)
-        intentShare.setDataAndType(Uri.parse(file.absolutePath), typeCompat)
-        intentShare.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(intentShare)
-    }
-
-    override fun onFileRename(file: File) {
-    }
+//
+//    override fun onBackPressed() {
+//        if (vm.fileList.size > 1) {
+//            vm.fileList.pop()
+//            mAdapter.updateList(getFiles())
+//            binding.recyclerView.smoothScrollToPosition(vm.files.pop())
+//        } else {
+//            AlertDialog.Builder(this).apply {
+//                setTitle("Are You Sure Exit?")
+//                setPositiveButton("Exit") { _, _ ->
+//                    super.onBackPressed()
+//                }
+//                setNegativeButton("Cancel") { _, _ ->
+//                    setCancelable(true)
+//                }
+//                show()
+//            }
+//        }
+//    }
 }

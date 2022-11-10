@@ -1,24 +1,22 @@
 package com.keecoding.simplefilemanager
 
 import android.os.Environment
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import java.io.File
 import java.util.*
 
 class FileViewModel: ViewModel() {
 
-    val fileList: Stack<List<File>> = Stack()
-    val files: Stack<Int> = Stack()
+    private val _searchQuery: MutableLiveData<String?> = MutableLiveData(null)
+    val searchQuery get() = _searchQuery as LiveData<String?>
 
-    init {
-        fileList.push(File(Environment.getExternalStorageDirectory().path).listFiles()?.asList())
-
-        files.push(0)
+    fun search(query: String) {
+        _searchQuery.postValue(query)
     }
 
-    fun openFolder(folderPosition: Int): List<File> {
-        val file = File(fileList.peek()[folderPosition].path)
-        files.push(folderPosition)
-        return fileList.push(file.listFiles().toList())
+    fun endSearch() {
+        _searchQuery.postValue(null)
     }
 }
